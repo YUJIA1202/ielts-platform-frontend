@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+:root {
+  --accent: #C0392B;
+  --accent-hover: #A93226;
+  --accent-light: #FDECEA;
+  --bg: #FAFAF8;
+  --bg2: #F4F1EC;
+  --bg3: #EDE9E2;
+  --text1: #1A1208;
+  --text2: #5C4A2A;
+  --text3: #9C8A6A;
+  --border: #E2D9CC;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text1);
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
