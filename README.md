@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 雅思写作平台 — 前端
 
-## Getting Started
+Next.js 14 + TypeScript 搭建的雅思写作学习平台。
 
-First, run the development server:
+## 技术栈
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js 14 / TypeScript
+- Tailwind CSS 响应式布局
+- App Router + SSR
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 主要功能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**用户端**
+- 真题库浏览与关键词搜索
+- 范文阅读与 PDF 下载（基础订阅，含水印）
+- 教学视频观看（高级订阅）
+- 套餐购买与订单管理
+- 作文提交与批改查看
+- 个人学习记录与反思笔记
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**管理员端**
+- 题目、范文、视频的增删改查
+- 用户管理与权限调整
+- 意见反馈与批改任务处理
+- 资料与视频上传
 
-## Learn More
+## 本地运行
 
-To learn more about Next.js, take a look at the following resources:
+1. 安装依赖：`npm install`
+2. 启动开发服务器：`npm run dev`
+3. 确保后端服务已在 `http://localhost:4000` 运行
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 相关仓库
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+后端：[ielts-platform-backend](https://github.com/YUJIA1202/ielts-platform-backend)
