@@ -40,96 +40,187 @@ export default function EssayDetailPage() {
       .finally(() => setLoading(false))
   }, [id, router])
 
-  async function handleDownloadPDF() {
-    if (!essay || !user) return
-    setDownloading(true)
-    try {
-      const { jsPDF } = await import('jspdf')
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = 210
-      const pageH = 297
-      const margin = 20
-      const maxW = pageW - margin * 2
-      let y = margin
+ async function handleDownloadPDF() {
+  if (!essay || !user) return
+  setDownloading(true)
+  try {
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageW = 210
+    const pageH = 297
+    const margin = 20
+    const maxW = pageW - margin * 2
+    let y = margin
 
-      const addWatermark = () => {
-        doc.setTextColor(220, 220, 220)
-        doc.setFontSize(28)
-        doc.setFont('helvetica', 'bold')
-        const wm = `${user.phone || user.username || 'IELTS PRO'}`
-        for (let row = 0; row < 6; row++) {
-          for (let col = 0; col < 3; col++) {
-            doc.saveGraphicsState()
-            doc.text(wm, 30 + col * 70, 50 + row * 50, { angle: 30, renderingMode: 'fill' })
-            doc.restoreGraphicsState()
-          }
+    // 把文字渲染成图片（解决中文乱码）
+    const textToImage = (text: string, fontSize: number, color: string, bold = false): Promise<{ dataUrl: string; widthMM: number; heightMM: number }> => {
+      return new Promise(resolve => {
+        const canvas = document.createElement('canvas')
+        const scale = 3
+        const ctx = canvas.getContext('2d')!
+        const fontStr = `${bold ? 'bold ' : ''}${fontSize * scale}px "PingFang SC", "Microsoft YaHei", sans-serif`
+        ctx.font = fontStr
+        const textWidth = ctx.measureText(text).width
+        const lineH = fontSize * scale * 1.5
+        canvas.width = Math.min(textWidth + 20, maxW * scale * 3.78)
+        canvas.height = lineH + 10
+        ctx.font = fontStr
+        ctx.fillStyle = color
+        ctx.fillText(text, 0, lineH * 0.8)
+        resolve({
+          dataUrl: canvas.toDataURL('image/png'),
+          widthMM: canvas.width / (scale * 3.78),
+          heightMM: canvas.height / (scale * 3.78),
+        })
+      })
+    }
+
+    // 写一行文字（自动换行）
+    const writeText = async (text: string, fontSize: number, bold = false, color = '#1e293b') => {
+      // 按 maxW 分行
+      const canvas = document.createElement('canvas')
+      const scale = 3
+      const ctx = canvas.getContext('2d')!
+      const fontStr = `${bold ? 'bold ' : ''}${fontSize * scale}px "PingFang SC", "Microsoft YaHei", sans-serif`
+      ctx.font = fontStr
+
+      // 手动分行
+      const words = text.split('')
+      const lines: string[] = []
+      let current = ''
+      const maxPx = maxW * scale * 3.78
+      for (const ch of words) {
+        const test = current + ch
+        if (ctx.measureText(test).width > maxPx && current) {
+          lines.push(current)
+          current = ch
+        } else {
+          current = test
         }
-        doc.setTextColor(0, 0, 0)
       }
+      if (current) lines.push(current)
 
-      const writeText = (text: string, fontSize: number, isBold = false, color = '#1e293b') => {
-        doc.setFontSize(fontSize)
-        doc.setFont('helvetica', isBold ? 'bold' : 'normal')
-        const r = parseInt(color.slice(1, 3), 16)
-        const g = parseInt(color.slice(3, 5), 16)
-        const b = parseInt(color.slice(5, 7), 16)
-        doc.setTextColor(r, g, b)
-        const lines = doc.splitTextToSize(text, maxW)
-        lines.forEach((line: string) => {
-          if (y + fontSize * 0.5 > pageH - margin) {
+      const lineH = fontSize * scale * 1.6
+      for (const line of lines) {
+        const lineCanvas = document.createElement('canvas')
+        lineCanvas.width = maxPx + 20
+        lineCanvas.height = lineH + 4
+        const lctx = lineCanvas.getContext('2d')!
+        lctx.font = fontStr
+        lctx.fillStyle = color
+        lctx.fillText(line, 0, lineH * 0.82)
+        const dataUrl = lineCanvas.toDataURL('image/png')
+        const hMM = lineCanvas.height / (scale * 3.78)
+        if (y + hMM > pageH - margin) {
+          addWatermark()
+          doc.addPage()
+          y = margin
+        }
+        doc.addImage(dataUrl, 'PNG', margin, y, maxW, hMM)
+        y += hMM * 0.85
+      }
+      y += 1
+    }
+
+    // 水印（更透明、更小、间距更大）
+    const addWatermark = () => {
+      doc.setTextColor(225, 225, 225)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'normal')
+      const wm = user.phone || user.username || 'IELTS PRO'
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 3; col++) {
+          doc.saveGraphicsState()
+          doc.text(wm, 25 + col * 75, 60 + row * 60, { angle: 25, renderingMode: 'fill' })
+          doc.restoreGraphicsState()
+        }
+      }
+      doc.setTextColor(0, 0, 0)
+    }
+
+    addWatermark()
+
+    // 标题
+    await writeText('IELTS Writing - Model Essay', 15, true, '#1d4ed8')
+    await writeText(`${essay.task === 'TASK2' ? 'Task 2 大作文' : 'Task 1 小作文'}${essay.score ? ` · ${essay.score}分` : ''}`, 10, false, '#64748b')
+    if (essay.subtype || essay.topic) {
+      await writeText(`${essay.subtype || ''}${essay.subtype && essay.topic ? ' · ' : ''}${essay.topic || ''}`, 9, false, '#94a3b8')
+    }
+    y += 4
+    doc.setDrawColor(200, 200, 200)
+    doc.line(margin, y, pageW - margin, y)
+    y += 6
+
+    // 题目
+    if (essay.questionContent) {
+      await writeText('题目', 11, true, '#374151')
+      await writeText(essay.questionContent, 10, false, '#374151')
+
+      // 题目图片
+if (essay.questionImageUrl) {
+  try {
+    const imgDataUrl = await new Promise<string>((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        canvas.getContext('2d')!.drawImage(img, 0, 0)
+        resolve(canvas.toDataURL('image/png'))
+      }
+      img.onerror = reject
+      img.src = essay.questionImageUrl + '?t=' + Date.now()
+    })
+    const img = new Image()
+    await new Promise<void>(resolve => {
+      img.onload = () => resolve()
+      img.src = imgDataUrl
+    })
+          const imgW = Math.min(maxW, 140) // 最大 140mm 宽
+          const imgH = (img.height / img.width) * imgW
+          if (y + imgH > pageH - margin) {
             addWatermark()
             doc.addPage()
             y = margin
           }
-          doc.text(line, margin, y)
-          y += fontSize * 0.45
-        })
-        y += 3
+          doc.addImage(imgDataUrl, 'PNG', margin + (maxW - imgW) / 2, y, imgW, imgH)
+          y += imgH + 6
+        } catch (e) {
+          console.warn('图片加载失败', e)
+        }
       }
 
-      addWatermark()
-      writeText('IELTS Writing - Model Essay', 16, true, '#1d4ed8')
-      writeText(`${essay.task === 'TASK2' ? 'Task 2 大作文' : 'Task 1 小作文'}${essay.score ? ` · ${essay.score}分` : ''}`, 11, false, '#64748b')
-      if (essay.subtype || essay.topic) {
-        writeText(`${essay.subtype || ''}${essay.subtype && essay.topic ? ' · ' : ''}${essay.topic || ''}`, 10, false, '#94a3b8')
-      }
       y += 4
       doc.setDrawColor(200, 200, 200)
       doc.line(margin, y, pageW - margin, y)
-      y += 8
-
-      if (essay.questionContent) {
-        writeText('题目', 12, true, '#374151')
-        writeText(essay.questionContent, 11, false, '#374151')
-        y += 4
-        doc.line(margin, y, pageW - margin, y)
-        y += 8
-      }
-
-      writeText('范文', 12, true, '#374151')
-      const paragraphs = essay.content.split('\n').filter(p => p.trim())
-      paragraphs.forEach(p => {
-        writeText(p.trim(), 11, false, '#1e293b')
-        y += 2
-      })
-
       y += 6
-      doc.setDrawColor(200, 200, 200)
-      doc.line(margin, y, pageW - margin, y)
-      y += 6
-      writeText(`© IELTS Writing Pro · ${user.phone || user.username} · 仅供个人学习使用`, 9, false, '#94a3b8')
-      addWatermark()
-
-      const filename = `范文_${essay.task}_${essay.score || ''}分_${Date.now()}.pdf`
-      doc.save(filename)
-    } catch (err) {
-      console.error('PDF生成失败', err)
-      alert('PDF生成失败，请稍后重试')
-    } finally {
-      setDownloading(false)
     }
-  }
 
+    // 范文正文
+    await writeText('范文', 11, true, '#374151')
+    const paragraphs = essay.content.split('\n').filter(p => p.trim())
+    for (const p of paragraphs) {
+      await writeText(p.trim(), 10, false, '#1e293b')
+      y += 1
+    }
+
+    y += 4
+    doc.setDrawColor(200, 200, 200)
+    doc.line(margin, y, pageW - margin, y)
+    y += 4
+    await writeText(`© IELTS Writing Pro · ${user.phone || user.username} · 仅供个人学习使用`, 8, false, '#94a3b8')
+    addWatermark()
+
+    const filename = `范文_${essay.task}_${essay.score || ''}分_${Date.now()}.pdf`
+    doc.save(filename)
+  } catch (err) {
+    console.error('PDF生成失败', err)
+    alert('PDF生成失败，请稍后重试')
+  } finally {
+    setDownloading(false)
+  }
+}
   async function handleDownloadAnnotated() {
     if (!essay?.annotatedPdfUrl || !user) return
     setDownloadingAnnotated(true)
