@@ -193,7 +193,17 @@ function ExamRoomContent() {
             )}
             <div className="exam-question-hint">Write at least {minWords} words.</div>
             {currentQ?.task === 'TASK1' && (
-              <div className="exam-chart-placeholder">📊 图表区域（实际考试中此处显示题目配图）</div>
+              <div className="exam-chart-placeholder">
+                {'imageUrl' in (currentQ ?? {}) ? (
+                <img
+src={(currentQ as Question & { imageUrl?: string }).imageUrl}
+                    alt="题目图表"
+                    style={{ maxWidth: '100%', borderRadius: 8 }}
+                  />
+                ) : (
+                  <span>暂无配图</span>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -19,6 +19,7 @@ interface Essay {
   questionContent?: string
   annotatedPdfUrl?: string
   createdAt: string
+  questionImageUrl?: string 
 }
 
 export default function EssayDetailPage() {
@@ -248,8 +249,15 @@ export default function EssayDetailPage() {
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>题目</div>
           <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.85, fontFamily: 'Georgia, serif' }}>
-            {essay.questionContent}
-          </div>
+  {essay.questionContent}
+</div>
+{essay.questionImageUrl && (
+  <img
+    src={essay.questionImageUrl}
+    alt="题目图表"
+    style={{ marginTop: 16, maxWidth: '100%', borderRadius: 8, border: '1px solid #e2e8f0' }}
+  />
+)}
         </div>
       )}
 
