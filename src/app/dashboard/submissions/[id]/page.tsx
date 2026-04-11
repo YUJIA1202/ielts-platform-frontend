@@ -142,12 +142,13 @@ export default function SubmissionDetailPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>题目</span>
               </div>
               <div style={{ padding: '24px' }}>
-                {s.imageUrl && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 8, padding: '10px 16px', marginBottom: questionText ? 16 : 0 }}>
-                    <span style={{ fontSize: 18 }}>🖼️</span>
-                    <span style={{ fontSize: 13, color: '#0284c7', fontWeight: 500 }}>含题目图片</span>
-                  </div>
-                )}
+    {s.imageUrl && (
+  <img
+    src={s.imageUrl}
+    alt="题目图表"
+    style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
+  />
+)}
                 {questionText && (
                   <p style={{ margin: 0, fontSize: 17, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}>{questionText}</p>
                 )}

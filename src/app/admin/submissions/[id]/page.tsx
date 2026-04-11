@@ -163,13 +163,20 @@ export default function AdminSubmissionDetailPage() {
         <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '20px 24px' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#1d4ed8', marginBottom: 14 }}>📎 用户附件</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {sub.imageUrl ? (
-              <a href={sub.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, border: '1.5px solid #bfdbfe', color: '#1d4ed8', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: '#eff6ff' }}>
-                🖼️ 查看题目图片 →
-              </a>
-            ) : (
-              <div style={{ padding: '12px 14px', borderRadius: 10, border: '1.5px dashed #e8f0fe', color: '#94a3b8', fontSize: 13 }}>无图片附件</div>
-            )}
+         {sub.imageUrl ? (
+  <>
+    <a href={sub.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, border: '1.5px solid #bfdbfe', color: '#1d4ed8', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: '#eff6ff' }}>
+      🖼️ 查看题目图片 →
+    </a>
+    <img
+      src={sub.imageUrl}
+      alt="题目图片"
+      style={{ marginTop: 10, maxWidth: '100%', borderRadius: 8, border: '1px solid #e2e8f0' }}
+    />
+  </>
+) : (
+  <div style={{ padding: '12px 14px', borderRadius: 10, border: '1.5px dashed #e8f0fe', color: '#94a3b8', fontSize: 13 }}>无图片附件</div>
+)}
             {sub.wordFileUrl ? (
               <a href={sub.wordFileUrl} download style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, border: '1.5px solid #bbf7d0', color: '#16a34a', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: '#f0fdf4' }}>
                 📄 下载 Word 原文 →

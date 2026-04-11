@@ -6,10 +6,8 @@ import { useLayoutStore } from '@/store/layoutStore'
 import { Question, Essay } from '@/types'
 import { useAuthStore } from '@/store/authStore'
 
-
 const DAILY_OUTLINE_LIMIT = 4
 const STORAGE_KEY = 'outline_usage'
-
 
 function getOutlineUsage(): { date: string; count: number } {
   try {
@@ -44,32 +42,32 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
   const [outlineUnlocked, setOutlineUnlocked] = useState(false)
   const [todayCount, setTodayCount] = useState(0)
   const { user } = useAuthStore()
-const isSubscribed = user?.role === 'ADMIN' || user?.subscription === 'BASIC' || user?.subscription === 'PRO'
+  const isSubscribed = user?.role === 'ADMIN' || user?.subscription === 'BASIC' || user?.subscription === 'PRO'
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const qRes = await api.get(`/questions/${id}`)
-      setQuestion(qRes.data)
-      const eRes = await api.get(`/essays/question/${id}`)
-      setEssays(eRes.data)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const qRes = await api.get(`/questions/${id}`)
+        setQuestion(qRes.data)
+        const eRes = await api.get(`/essays/question/${id}`)
+        setEssays(eRes.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
-  fetchData()
-  const count = getTodayOutlineCount()
-  setTodayCount(count)
-  if (isSubscribed || count < DAILY_OUTLINE_LIMIT) {
-    if (!isSubscribed) {
-      const newCount = incrementOutlineUsage()
-      setTodayCount(newCount)
+    fetchData()
+    const count = getTodayOutlineCount()
+    setTodayCount(count)
+    if (isSubscribed || count < DAILY_OUTLINE_LIMIT) {
+      if (!isSubscribed) {
+        const newCount = incrementOutlineUsage()
+        setTodayCount(newCount)
+      }
+      setOutlineUnlocked(true)
     }
-    setOutlineUnlocked(true)
-  }
-}, [id, isSubscribed])
+  }, [id, isSubscribed])
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '80px', color: '#94a3b8' }}>加载中...</div>
@@ -115,6 +113,13 @@ useEffect(() => {
         <div style={{ fontSize: '17px', color: '#1e3a5f', lineHeight: '1.75' }}>
           {question.content}
         </div>
+        {question.imageUrl && (
+          <img
+            src={question.imageUrl}
+            alt="题目图表"
+            style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
+          />
+        )}
       </div>
 
       {/* 三个按钮 */}
@@ -151,7 +156,6 @@ useEffect(() => {
 
         {/* 写作练习 */}
         <div onClick={() => router.push(`/exam-room?questionId=${id}`)}
-        
           style={{ flex: 1, minWidth: '140px', background: '#fff', borderRadius: '12px', padding: '16px 20px', cursor: 'pointer', border: '2px solid #e8f0fe', transition: 'all .15s' }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6' }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e8f0fe' }}>

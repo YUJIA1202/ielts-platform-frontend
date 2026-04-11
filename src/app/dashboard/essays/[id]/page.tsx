@@ -17,9 +17,9 @@ interface Essay {
   source?: string
   content: string
   questionContent?: string
+  questionImageUrl?: string
   annotatedPdfUrl?: string
   createdAt: string
-  questionImageUrl?: string 
 }
 
 export default function EssayDetailPage() {
@@ -40,22 +40,18 @@ export default function EssayDetailPage() {
       .finally(() => setLoading(false))
   }, [id, router])
 
-  // 生成带水印的 PDF（根据页面内容）
   async function handleDownloadPDF() {
     if (!essay || !user) return
     setDownloading(true)
     try {
-      // 动态加载 jsPDF
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-
       const pageW = 210
       const pageH = 297
       const margin = 20
       const maxW = pageW - margin * 2
       let y = margin
 
-      // 水印函数
       const addWatermark = () => {
         doc.setTextColor(220, 220, 220)
         doc.setFontSize(28)
@@ -71,7 +67,6 @@ export default function EssayDetailPage() {
         doc.setTextColor(0, 0, 0)
       }
 
-      // 辅助：写文字并自动换页
       const writeText = (text: string, fontSize: number, isBold = false, color = '#1e293b') => {
         doc.setFontSize(fontSize)
         doc.setFont('helvetica', isBold ? 'bold' : 'normal')
@@ -93,21 +88,16 @@ export default function EssayDetailPage() {
       }
 
       addWatermark()
-
-      // 标题
       writeText('IELTS Writing - Model Essay', 16, true, '#1d4ed8')
       writeText(`${essay.task === 'TASK2' ? 'Task 2 大作文' : 'Task 1 小作文'}${essay.score ? ` · ${essay.score}分` : ''}`, 11, false, '#64748b')
       if (essay.subtype || essay.topic) {
         writeText(`${essay.subtype || ''}${essay.subtype && essay.topic ? ' · ' : ''}${essay.topic || ''}`, 10, false, '#94a3b8')
       }
       y += 4
-
-      // 分隔线
       doc.setDrawColor(200, 200, 200)
       doc.line(margin, y, pageW - margin, y)
       y += 8
 
-      // 题目
       if (essay.questionContent) {
         writeText('题目', 12, true, '#374151')
         writeText(essay.questionContent, 11, false, '#374151')
@@ -116,7 +106,6 @@ export default function EssayDetailPage() {
         y += 8
       }
 
-      // 范文正文
       writeText('范文', 12, true, '#374151')
       const paragraphs = essay.content.split('\n').filter(p => p.trim())
       paragraphs.forEach(p => {
@@ -128,11 +117,7 @@ export default function EssayDetailPage() {
       doc.setDrawColor(200, 200, 200)
       doc.line(margin, y, pageW - margin, y)
       y += 6
-
-      // 水印版权声明
       writeText(`© IELTS Writing Pro · ${user.phone || user.username} · 仅供个人学习使用`, 9, false, '#94a3b8')
-
-      // 最后一页也加水印
       addWatermark()
 
       const filename = `范文_${essay.task}_${essay.score || ''}分_${Date.now()}.pdf`
@@ -145,7 +130,6 @@ export default function EssayDetailPage() {
     }
   }
 
-  // 下载老师批注版 PDF（后端存储的文件）
   async function handleDownloadAnnotated() {
     if (!essay?.annotatedPdfUrl || !user) return
     setDownloadingAnnotated(true)
@@ -176,7 +160,6 @@ export default function EssayDetailPage() {
   return (
     <div style={{ maxWidth: collapsed ? '860px' : '100%', margin: collapsed ? '0 20% 0 5%' : '0', transition: 'all .2s ease' }}>
 
-      {/* 返回按钮 */}
       <button
         onClick={() => router.back()}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24, padding: '8px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
@@ -184,7 +167,6 @@ export default function EssayDetailPage() {
         ← 返回范文列表
       </button>
 
-      {/* 标签行 */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
         <span style={{ fontSize: 13, background: '#eff6ff', color: '#1d4ed8', padding: '4px 12px', borderRadius: 6, fontWeight: 600 }}>
           {essay.task === 'TASK2' ? 'Task 2 大作文' : 'Task 1 小作文'}
@@ -200,7 +182,6 @@ export default function EssayDetailPage() {
         {essay.source && <span style={{ fontSize: 13, color: '#94a3b8', padding: '4px 0' }}>{essay.source}</span>}
       </div>
 
-      {/* 下载按钮区 */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
         <button
           onClick={handleDownloadPDF}
@@ -249,15 +230,15 @@ export default function EssayDetailPage() {
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>题目</div>
           <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.85, fontFamily: 'Georgia, serif' }}>
-  {essay.questionContent}
-</div>
-{essay.questionImageUrl && (
-  <img
-    src={essay.questionImageUrl}
-    alt="题目图表"
-    style={{ marginTop: 16, maxWidth: '100%', borderRadius: 8, border: '1px solid #e2e8f0' }}
-  />
-)}
+            {essay.questionContent}
+          </div>
+          {essay.questionImageUrl && (
+            <img
+              src={essay.questionImageUrl}
+              alt="题目图表"
+              style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
+            />
+          )}
         </div>
       )}
 
@@ -271,8 +252,6 @@ export default function EssayDetailPage() {
             </p>
           ))}
         </div>
-
-        {/* 字数统计 */}
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f1f5f9', display: 'flex', gap: 20 }}>
           <span style={{ fontSize: 13, color: '#94a3b8' }}>
             字数：<strong style={{ color: '#64748b' }}>{essay.content.trim().split(/\s+/).length} 词</strong>
