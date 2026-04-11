@@ -113,13 +113,13 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
         <div style={{ fontSize: '17px', color: '#1e3a5f', lineHeight: '1.75' }}>
           {question.content}
         </div>
-        {question.imageUrl && (
-          <img
-            src={question.imageUrl}
-            alt="题目图表"
-            style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
-          />
-        )}
+{question.imageUrl && (
+  <img
+    src={question.imageUrl}
+    alt="题目图表"
+    style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '16px auto 0' }}
+  />
+)}
       </div>
 
       {/* 三个按钮 */}

@@ -82,17 +82,13 @@ export default function SubmissionDetailPage() {
   const questionText = s.question?.content || s.customPrompt || ''
   const wordCount = countWords(s.content)
   const isFile = !!s.wordFileUrl
-
-  // 优先用新字段 overallScore，兼容旧字段 score
   const displayOverall = s.overallScore ?? s.score
-
-
 
   const dims = [
     { label: 'TA', desc: '任务回应', value: s.taScore,  icon: '🎯', bg: '#eff6ff', border: '#bfdbfe' },
     { label: 'CC', desc: '连贯衔接', value: s.ccScore,  icon: '🔗', bg: '#f0fdf4', border: '#bbf7d0' },
     { label: 'LR', desc: '词汇资源', value: s.lrScore,  icon: '📚', bg: '#faf5ff', border: '#e9d5ff' },
-    { label: 'GRA',desc: '语法范围', value: s.graScore, icon: '✏️', bg: '#fff7ed', border: '#fed7aa' },
+    { label: 'GRA', desc: '语法范围', value: s.graScore, icon: '✏️', bg: '#fff7ed', border: '#fed7aa' },
   ]
 
   const downloadUrl = s.reviewFileUrl || s.feedbackUrl
@@ -131,8 +127,6 @@ export default function SubmissionDetailPage() {
       {/* 已批改：两列 */}
       {!isPending ? (
         <div className="detail-grid">
-
-          {/* 左列：题目 + 作文 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             {/* 题目 */}
@@ -142,13 +136,13 @@ export default function SubmissionDetailPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>题目</span>
               </div>
               <div style={{ padding: '24px' }}>
-    {s.imageUrl && (
-  <img
-    src={s.imageUrl}
-    alt="题目图表"
-    style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
-  />
-)}
+                {s.imageUrl && (
+                  <img
+                    src={s.imageUrl}
+                    alt="题目图表"
+                    style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '0 auto 16px' }}
+                  />
+                )}
                 {questionText && (
                   <p style={{ margin: 0, fontSize: 17, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}>{questionText}</p>
                 )}
@@ -184,13 +178,8 @@ export default function SubmissionDetailPage() {
 
           {/* 右列 sidebar */}
           <div className="detail-sidebar">
-
-            {/* 综合分大卡片 */}
             {displayOverall != null && (
-              <div style={{
-                background: '#fff', border: '1.5px solid #e2e8f0',
-                borderRadius: 16, padding: '24px 20px', textAlign: 'center',
-              }}>
+              <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '24px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>综合分</div>
                 <div style={{ fontSize: 68, fontWeight: 900, color: '#1e3a5f', lineHeight: 1 }}>
                   {displayOverall.toFixed(1)}
@@ -199,7 +188,6 @@ export default function SubmissionDetailPage() {
               </div>
             )}
 
-            {/* 四维分卡片 */}
             {dims.some(d => d.value != null) && (
               <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '20px' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>四维评分</div>
@@ -225,25 +213,17 @@ export default function SubmissionDetailPage() {
               </div>
             )}
 
-            {/* 老师评语 */}
             {s.adminComment && (
               <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '20px' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
                   💬 老师评语
                 </div>
-                <p style={{
-                  margin: 0, fontSize: 14, color: '#374151',
-                  lineHeight: 1.85, whiteSpace: 'pre-wrap',
-                  background: '#f8faff', borderRadius: 10,
-                  padding: '14px 16px',
-                  border: '1px solid #e8f0fe',
-                }}>
+                <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.85, whiteSpace: 'pre-wrap', background: '#f8faff', borderRadius: 10, padding: '14px 16px', border: '1px solid #e8f0fe' }}>
                   {s.adminComment}
                 </p>
               </div>
             )}
 
-            {/* 下载批改文件 */}
             {downloadUrl ? (
               <a
                 href={downloadUrl.startsWith('http') ? downloadUrl : `http://localhost:4000${downloadUrl}`}
@@ -277,6 +257,13 @@ export default function SubmissionDetailPage() {
               <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>题目</span>
             </div>
             <div style={{ padding: '24px' }}>
+              {s.imageUrl && (
+                <img
+                  src={s.imageUrl}
+                  alt="题目图表"
+                  style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '0 auto 16px' }}
+                />
+              )}
               {questionText && <p style={{ margin: 0, fontSize: 17, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}>{questionText}</p>}
             </div>
           </div>
