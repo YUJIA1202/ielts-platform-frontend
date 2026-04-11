@@ -1,10 +1,12 @@
 import axios from 'axios'
 
 const api = axios.create({
- baseURL: 'https://ielts-platform-backend-production-06dd.up.railway.app/api',
+  baseURL: 'https://ielts-platform-backend-production-06dd.up.railway.app/api',
+  withCredentials: true, // 自动携带 Cookie
 })
 
 api.interceptors.request.use((config) => {
+  // 兼容旧 token：如果 localStorage 还有 token 就带上
   const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -18,11 +20,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const token = localStorage.getItem('token')
       if (token) {
-        // 只有已登录状态下收到 401 才跳转（token 过期）
         localStorage.removeItem('token')
         window.location.href = '/login'
       }
-      // 登录页本身收到 401（密码错误）不跳转，直接透传错误
     }
     return Promise.reject(error)
   }
