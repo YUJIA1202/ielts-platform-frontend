@@ -233,11 +233,11 @@ export default function EssayDetailPage() {
             {essay.questionContent}
           </div>
 {essay.questionImageUrl && (
-  <img
-    src={essay.questionImageUrl}
-    alt="题目图表"
-    style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '16px auto 0' }}
-  />
+ <img
+  src={essay.questionImageUrl}
+  alt="题目图表"
+  style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '16px auto 0', borderRadius: 8, border: '1px solid #e2e8f0' }}
+/>
 )}
         </div>
       )}

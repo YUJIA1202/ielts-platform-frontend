@@ -137,11 +137,11 @@ export default function SubmissionDetailPage() {
               </div>
               <div style={{ padding: '24px' }}>
                 {s.imageUrl && (
-                  <img
-                    src={s.imageUrl}
-                    alt="题目图表"
-                    style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '0 auto 16px' }}
-                  />
+                 <img
+  src={s.imageUrl}
+  alt="题目图表"
+  style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '0 auto 16px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+/>
                 )}
                 {questionText && (
                   <p style={{ margin: 0, fontSize: 17, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}>{questionText}</p>
@@ -258,11 +258,11 @@ export default function SubmissionDetailPage() {
             </div>
             <div style={{ padding: '24px' }}>
               {s.imageUrl && (
-                <img
-                  src={s.imageUrl}
-                  alt="题目图表"
-                  style={{ marginBottom: questionText ? 16 : 0, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '0 auto 16px' }}
-                />
+          <img
+  src={s.imageUrl}
+  alt="题目图表"
+  style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '0 auto 16px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+/>
               )}
               {questionText && <p style={{ margin: 0, fontSize: 17, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}>{questionText}</p>}
             </div>

@@ -114,11 +114,11 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
           {question.content}
         </div>
 {question.imageUrl && (
-  <img
-    src={question.imageUrl}
-    alt="题目图表"
-    style={{ marginTop: 16, maxWidth: '600px', width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block', margin: '16px auto 0' }}
-  />
+<img
+  src={question.imageUrl}
+  alt="题目图表"
+  style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '16px auto 0', borderRadius: 8, border: '1px solid #e2e8f0' }}
+/>
 )}
       </div>
 
