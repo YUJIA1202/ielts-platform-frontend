@@ -58,16 +58,22 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
       }
     }
     fetchData()
+
     const count = getTodayOutlineCount()
     setTodayCount(count)
-    if (isSubscribed || count < DAILY_OUTLINE_LIMIT) {
-      if (!isSubscribed) {
+
+    if (user) {
+      if (isSubscribed) {
+        // 订阅用户直接解锁，不计数
+        setOutlineUnlocked(true)
+      } else if (count < DAILY_OUTLINE_LIMIT) {
+        // 免费用户还有次数
         const newCount = incrementOutlineUsage()
         setTodayCount(newCount)
+        setOutlineUnlocked(true)
       }
-      setOutlineUnlocked(true)
     }
-  }, [id, isSubscribed])
+  }, [id, isSubscribed, user])
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '80px', color: '#94a3b8' }}>加载中...</div>
@@ -113,13 +119,13 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
         <div style={{ fontSize: '17px', color: '#1e3a5f', lineHeight: '1.75' }}>
           {question.content}
         </div>
-{question.imageUrl && (
-<img
-  src={question.imageUrl}
-  alt="题目图表"
-  style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '16px auto 0', borderRadius: 8, border: '1px solid #e2e8f0' }}
-/>
-)}
+        {question.imageUrl && (
+          <img
+            src={question.imageUrl}
+            alt="题目图表"
+            style={{ display: 'block', maxWidth: '600px', width: '100%', margin: '16px auto 0', borderRadius: 8, border: '1px solid #e2e8f0' }}
+          />
+        )}
       </div>
 
       {/* 三个按钮 */}
@@ -138,7 +144,11 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
           <div style={{ fontSize: '20px', marginBottom: '6px' }}>{outlineLocked ? '🔒' : '💡'}</div>
           <div style={{ fontSize: '15px', fontWeight: '600', color: outlineLocked ? '#94a3b8' : '#1e3a5f' }}>看思路</div>
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '3px' }}>
-            {outlineLocked ? '明天再来' : `今日剩余 ${Math.max(0, DAILY_OUTLINE_LIMIT - todayCount)} 次`}
+            {outlineLocked
+              ? '明天再来'
+              : isSubscribed
+                ? '不限次数'
+                : `今日剩余 ${Math.max(0, DAILY_OUTLINE_LIMIT - todayCount)} 次`}
           </div>
         </div>
 
@@ -171,7 +181,9 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e8f0fe', overflow: 'hidden' }}>
           <div style={{ padding: '20px 28px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: '15px', fontWeight: '600', color: '#1e3a5f' }}>💡 写作思路</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>今日已看 {todayCount}/{DAILY_OUTLINE_LIMIT}</div>
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+              {isSubscribed ? '订阅会员 · 不限次数' : `今日已看 ${todayCount}/${DAILY_OUTLINE_LIMIT}`}
+            </div>
           </div>
           <div style={{ padding: '28px 32px', fontSize: '15px', color: '#334155', lineHeight: '1.9', whiteSpace: 'pre-wrap' }}>
             {question.outline || '暂无思路内容，管理员尚未添加。'}
