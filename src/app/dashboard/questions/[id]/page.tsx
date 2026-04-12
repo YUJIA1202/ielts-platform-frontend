@@ -41,9 +41,11 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
   const [tab, setTab] = useState<'outline' | 'essays' | 'practice'>('outline')
   const [outlineUnlocked, setOutlineUnlocked] = useState(false)
   const [todayCount, setTodayCount] = useState(0)
+  const [userLoaded, setUserLoaded] = useState(false)
   const { user } = useAuthStore()
   const isSubscribed = user?.role === 'ADMIN' || user?.subscription === 'BASIC' || user?.subscription === 'PRO'
 
+  // 数据加载
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -58,24 +60,32 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
       }
     }
     fetchData()
+  }, [id])
+
+  // 等 user 加载完再判断思路权限（单独 effect，依赖 user）
+  useEffect(() => {
+    // user 还没从 store 里恢复，等一下
+    if (user === undefined) return
+    setUserLoaded(true)
 
     const count = getTodayOutlineCount()
     setTodayCount(count)
 
-    if (user) {
-      if (isSubscribed) {
-        // 订阅用户直接解锁，不计数
-        setOutlineUnlocked(true)
-      } else if (count < DAILY_OUTLINE_LIMIT) {
-        // 免费用户还有次数
-        const newCount = incrementOutlineUsage()
-        setTodayCount(newCount)
-        setOutlineUnlocked(true)
-      }
+    if (isSubscribed) {
+      // 订阅用户直接解锁，不计数
+      setOutlineUnlocked(true)
+    } else if (count < DAILY_OUTLINE_LIMIT) {
+      // 免费用户还有次数，消耗一次
+      const newCount = incrementOutlineUsage()
+      setTodayCount(newCount)
+      setOutlineUnlocked(true)
+    } else {
+      // 免费用户次数用完，锁定
+      setOutlineUnlocked(false)
     }
-  }, [id, isSubscribed, user])
+  }, [user, isSubscribed])
 
-  if (loading) return (
+  if (loading || !userLoaded) return (
     <div style={{ textAlign: 'center', padding: '80px', color: '#94a3b8' }}>加载中...</div>
   )
 
@@ -133,9 +143,9 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
 
         {/* 看思路 */}
         <div onClick={() => !outlineLocked && setTab('outline')}
-          style={{ flex: 1, minWidth: '140px', background: '#fff', borderRadius: '12px', padding: '16px 20px', cursor: outlineLocked ? 'not-allowed' : 'pointer', border: `2px solid ${tab === 'outline' ? '#3b82f6' : '#e8f0fe'}`, transition: 'all .15s', position: 'relative' }}
+          style={{ flex: 1, minWidth: '140px', background: '#fff', borderRadius: '12px', padding: '16px 20px', cursor: outlineLocked ? 'not-allowed' : 'pointer', border: `2px solid ${tab === 'outline' && !outlineLocked ? '#3b82f6' : '#e8f0fe'}`, transition: 'all .15s', position: 'relative' }}
           onMouseEnter={(e) => { if (!outlineLocked) e.currentTarget.style.borderColor = '#3b82f6' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = tab === 'outline' ? '#3b82f6' : '#e8f0fe' }}>
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = tab === 'outline' && !outlineLocked ? '#3b82f6' : '#e8f0fe' }}>
           {outlineLocked && (
             <div style={{ position: 'absolute', top: '10px', right: '12px', fontSize: '11px', background: '#fee2e2', color: '#dc2626', padding: '2px 8px', borderRadius: '6px', fontWeight: '500' }}>
               今日已用完
@@ -178,17 +188,33 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
 
       {/* 思路内容 */}
       {tab === 'outline' && (
-        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e8f0fe', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 28px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: '#1e3a5f' }}>💡 写作思路</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-              {isSubscribed ? '订阅会员 · 不限次数' : `今日已看 ${todayCount}/${DAILY_OUTLINE_LIMIT}`}
+        outlineLocked ? (
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e8f0fe', overflow: 'hidden' }}>
+            <div style={{ padding: '60px 32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#64748b', marginBottom: '8px' }}>今日思路查看次数已用完</div>
+              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '20px' }}>明天可继续查看，或升级订阅享受不限次数</div>
+              <button
+                onClick={() => router.push('/dashboard/pricing')}
+                style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                升级订阅 →
+              </button>
             </div>
           </div>
-          <div style={{ padding: '28px 32px', fontSize: '15px', color: '#334155', lineHeight: '1.9', whiteSpace: 'pre-wrap' }}>
-            {question.outline || '暂无思路内容，管理员尚未添加。'}
+        ) : (
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e8f0fe', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 28px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: '#1e3a5f' }}>💡 写作思路</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                {isSubscribed ? '订阅会员 · 不限次数' : `今日已看 ${todayCount}/${DAILY_OUTLINE_LIMIT}`}
+              </div>
+            </div>
+            <div style={{ padding: '28px 32px', fontSize: '15px', color: '#334155', lineHeight: '1.9', whiteSpace: 'pre-wrap' }}>
+              {question.outline || '暂无思路内容，管理员尚未添加。'}
+            </div>
           </div>
-        </div>
+        )
       )}
 
     </div>
