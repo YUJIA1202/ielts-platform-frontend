@@ -7,29 +7,6 @@ import { Question, Essay } from '@/types'
 import { useAuthStore } from '@/store/authStore'
 
 const DAILY_OUTLINE_LIMIT = 4
-const STORAGE_KEY = 'outline_usage'
-
-function getOutlineUsage(): { date: string; count: number } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { date: '', count: 0 }
-    return JSON.parse(raw)
-  } catch { return { date: '', count: 0 } }
-}
-
-function incrementOutlineUsage(): number {
-  const today = new Date().toISOString().split('T')[0]
-  const usage = getOutlineUsage()
-  const newCount = usage.date === today ? usage.count + 1 : 1
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: newCount }))
-  return newCount
-}
-
-function getTodayOutlineCount(): number {
-  const today = new Date().toISOString().split('T')[0]
-  const usage = getOutlineUsage()
-  return usage.date === today ? usage.count : 0
-}
 
 export default function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -62,27 +39,36 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
     fetchData()
   }, [id])
 
-  // 等 user 加载完再判断思路权限（单独 effect，依赖 user）
+  // 等 user 加载完再判断权限
   useEffect(() => {
-    // user 还没从 store 里恢复，等一下
     if (user === undefined) return
     setUserLoaded(true)
-
-    const count = getTodayOutlineCount()
-    setTodayCount(count)
 
     if (isSubscribed) {
       // 订阅用户直接解锁，不计数
       setOutlineUnlocked(true)
-    } else if (count < DAILY_OUTLINE_LIMIT) {
-      // 免费用户还有次数，消耗一次
-      const newCount = incrementOutlineUsage()
-      setTodayCount(newCount)
-      setOutlineUnlocked(true)
-    } else {
-      // 免费用户次数用完，锁定
-      setOutlineUnlocked(false)
+      return
     }
+
+    // 免费用户：查今日次数
+    api.get('/outline-view-log/today')
+      .then(res => {
+        const count = res.data.count || 0
+        setTodayCount(count)
+        if (count < DAILY_OUTLINE_LIMIT) {
+          // 还有次数，记录一次
+          api.post('/outline-view-log/record').then(res2 => {
+            setTodayCount(res2.data.count)
+          })
+          setOutlineUnlocked(true)
+        } else {
+          setOutlineUnlocked(false)
+        }
+      })
+      .catch(() => {
+        // 接口失败时降级允许查看
+        setOutlineUnlocked(true)
+      })
   }, [user, isSubscribed])
 
   if (loading || !userLoaded) return (
