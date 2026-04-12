@@ -19,6 +19,7 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
   const [outlineUnlocked, setOutlineUnlocked] = useState(false)
   const [todayCount, setTodayCount] = useState(0)
   const [userLoaded, setUserLoaded] = useState(false)
+  const [outlineViewed, setOutlineViewed] = useState(false) // 本次已记录过
   const { user } = useAuthStore()
   const isSubscribed = user?.role === 'ADMIN' || user?.subscription === 'BASIC' || user?.subscription === 'PRO'
 
@@ -39,37 +40,50 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
     fetchData()
   }, [id])
 
-  // 等 user 加载完再判断权限
+  // 等 user 加载完，只查次数，不消耗
   useEffect(() => {
     if (user === undefined) return
     setUserLoaded(true)
 
     if (isSubscribed) {
-      // 订阅用户直接解锁，不计数
       setOutlineUnlocked(true)
       return
     }
 
-    // 免费用户：查今日次数
+    // 免费用户：只查今日已用次数，判断是否还有余量
     api.get('/outline-view-log/today')
       .then(res => {
         const count = res.data.count || 0
         setTodayCount(count)
-        if (count < DAILY_OUTLINE_LIMIT) {
-          // 还有次数，记录一次
-          api.post('/outline-view-log/record').then(res2 => {
-            setTodayCount(res2.data.count)
-          })
-          setOutlineUnlocked(true)
-        } else {
-          setOutlineUnlocked(false)
-        }
+        setOutlineUnlocked(count < DAILY_OUTLINE_LIMIT)
       })
       .catch(() => {
-        // 接口失败时降级允许查看
         setOutlineUnlocked(true)
       })
   }, [user, isSubscribed])
+
+  // 点击「看思路」按钮
+  const handleClickOutline = () => {
+    if (outlineLocked) return
+    setTab('outline')
+
+    // 订阅用户不计数
+    if (isSubscribed) return
+
+    // 免费用户：只在本次会话第一次点击时记录
+    if (!outlineViewed) {
+      setOutlineViewed(true)
+      api.post('/outline-view-log/record')
+        .then(res => {
+          setTodayCount(res.data.count)
+          // 如果用完了，下次进这道题就锁住
+          if (res.data.count >= DAILY_OUTLINE_LIMIT) {
+            // 本次已经看了，不立刻锁，让用户看完当前这次
+          }
+        })
+        .catch(() => {})
+    }
+  }
 
   if (loading || !userLoaded) return (
     <div style={{ textAlign: 'center', padding: '80px', color: '#94a3b8' }}>加载中...</div>
@@ -128,7 +142,8 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
 
         {/* 看思路 */}
-        <div onClick={() => !outlineLocked && setTab('outline')}
+        <div
+          onClick={handleClickOutline}
           style={{ flex: 1, minWidth: '140px', background: '#fff', borderRadius: '12px', padding: '16px 20px', cursor: outlineLocked ? 'not-allowed' : 'pointer', border: `2px solid ${tab === 'outline' && !outlineLocked ? '#3b82f6' : '#e8f0fe'}`, transition: 'all .15s', position: 'relative' }}
           onMouseEnter={(e) => { if (!outlineLocked) e.currentTarget.style.borderColor = '#3b82f6' }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = tab === 'outline' && !outlineLocked ? '#3b82f6' : '#e8f0fe' }}>
