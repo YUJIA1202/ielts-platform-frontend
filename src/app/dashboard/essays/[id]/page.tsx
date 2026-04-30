@@ -246,10 +246,16 @@ export default function EssayDetailPage() {
         <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '28px 32px', marginBottom: 32 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>批注版范文</div>
           {hasAnnotations ? (
-            <div
-              style={{ fontSize: fontSize, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}
-              dangerouslySetInnerHTML={{ __html: annotatedHtml }}
-            />
+          <>
+    <style>{`
+      .annotated-content * { font-size: inherit !important; }
+    `}</style>
+    <div
+      className="annotated-content"
+      style={{ fontSize: fontSize, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}
+      dangerouslySetInnerHTML={{ __html: annotatedHtml }}
+    />
+  </>
           ) : (
             <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
