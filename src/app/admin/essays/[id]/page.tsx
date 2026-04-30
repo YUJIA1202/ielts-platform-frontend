@@ -22,21 +22,12 @@ interface Question {
   content: string
 }
 
-interface Annotation {
-  id: string
-  start: number
-  end: number
-  color: string
-  textColor: string
-  comment: string
-}
-
 const COLORS = [
-  { value: '#bfdbfe', label: '蓝色', textColor: '#1d4ed8' },
-  { value: '#fde68a', label: '黄色', textColor: '#b45309' },
-  { value: '#bbf7d0', label: '绿色', textColor: '#166534' },
-  { value: '#fecaca', label: '红色', textColor: '#991b1b' },
-  { value: '#e9d5ff', label: '紫色', textColor: '#6b21a8' },
+  { value: '#1d4ed8', label: '蓝色' },
+  { value: '#b45309', label: '黄色' },
+  { value: '#166534', label: '绿色' },
+  { value: '#991b1b', label: '红色' },
+  { value: '#6b21a8', label: '紫色' },
 ]
 
 export default function AdminEssayDetailPage() {
@@ -49,20 +40,9 @@ export default function AdminEssayDetailPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [form, setForm] = useState({ questionId: '', content: '', score: '' })
   const [tab, setTab] = useState<'edit' | 'annotate'>('edit')
-
-  const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [savingAnnotations, setSavingAnnotations] = useState(false)
-  const [popup, setPopup] = useState<{
-    visible: boolean
-    x: number
-    y: number
-    start: number
-    end: number
-    selectedText: string
-    color: string
-    comment: string
-  }>({ visible: false, x: 0, y: 0, start: 0, end: 0, selectedText: '', color: '#bfdbfe', comment: '' })
-  const contentRef = useRef<HTMLDivElement>(null)
+  const [selectedColor, setSelectedColor] = useState('#1d4ed8')
+  const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     api.get(`/essays/${id}`)
@@ -79,9 +59,22 @@ export default function AdminEssayDetailPage() {
     api.get('/questions', { params: { limit: '200' } })
       .then(res => setQuestions(res.data.questions || []))
     api.get(`/essays/${id}/annotations`)
-      .then(res => setAnnotations(res.data || []))
+      .then(res => {
+        if (editorRef.current && typeof res.data === 'string' && res.data) {
+          editorRef.current.innerHTML = res.data
+        }
+      })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  // 切换到批注tab时初始化编辑器内容
+  useEffect(() => {
+    if (tab === 'annotate' && editorRef.current && essay) {
+      if (!editorRef.current.innerHTML.trim()) {
+        editorRef.current.innerHTML = essay.content
+      }
+    }
+  }, [tab, essay])
 
   async function handleSave() {
     if (!form.content.trim()) { alert('范文内容不能为空'); return }
@@ -105,9 +98,12 @@ export default function AdminEssayDetailPage() {
   }
 
   async function handleSaveAnnotations() {
+    if (!editorRef.current) return
     setSavingAnnotations(true)
     try {
-      await api.put(`/essays/${id}/annotations`, { annotations })
+      await api.put(`/essays/${id}/annotations`, {
+        annotations: editorRef.current.innerHTML
+      })
       alert('批注保存成功')
     } catch {
       alert('保存失败')
@@ -116,83 +112,15 @@ export default function AdminEssayDetailPage() {
     }
   }
 
-  function handleTextSelect() {
+  function applyColor(color: string) {
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed) return
-    const selectedText = selection.toString().trim()
-    if (!selectedText || !contentRef.current) return
-
-    const range = selection.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
-    const containerRect = contentRef.current.getBoundingClientRect()
-
-    const content = essay?.content || ''
-    const start = content.indexOf(selectedText)
-    if (start === -1) return
-    const end = start + selectedText.length
-
-    setPopup({
-      visible: true,
-      x: rect.left - containerRect.left,
-      y: rect.bottom - containerRect.top + 8,
-      start,
-      end,
-      selectedText,
-      color: '#bfdbfe',
-      comment: '',
-    })
+    document.execCommand('foreColor', false, color)
+    setSelectedColor(color)
   }
 
-  function handleAddAnnotation() {
-    if (!popup.comment.trim()) { alert('请输入批注内容'); return }
-    const colorObj = COLORS.find(c => c.value === popup.color) || COLORS[0]
-    const newAnnotation: Annotation = {
-      id: Date.now().toString(),
-      start: popup.start,
-      end: popup.end,
-      color: popup.color,
-      textColor: colorObj.textColor,
-      comment: popup.comment,
-    }
-    setAnnotations(prev => [...prev, newAnnotation])
-    setPopup(p => ({ ...p, visible: false }))
-    window.getSelection()?.removeAllRanges()
-  }
-
-  function renderAnnotatedText(content: string) {
-    if (annotations.length === 0) return <span>{content}</span>
-
-    const sorted = [...annotations].sort((a, b) => a.start - b.start)
-    const parts: React.ReactNode[] = []
-    let cursor = 0
-
-    sorted.forEach((ann, i) => {
-      if (ann.start > cursor) {
-        parts.push(<span key={`text-${i}`}>{content.slice(cursor, ann.start)}</span>)
-      }
-      parts.push(
-        <span key={`ann-${ann.id}`}>
-          {content.slice(ann.start, ann.end)}
-          <span
-            style={{
-              color: ann.textColor,
-              fontSize: 14,
-              fontFamily: 'sans-serif',
-              marginLeft: 2,
-            }}
-          >
-            ({ann.comment})
-          </span>
-        </span>
-      )
-      cursor = ann.end
-    })
-
-    if (cursor < content.length) {
-      parts.push(<span key="text-end">{content.slice(cursor)}</span>)
-    }
-
-    return <>{parts}</>
+  function clearFormat() {
+    document.execCommand('removeFormat')
   }
 
   const inp: React.CSSProperties = {
@@ -270,6 +198,7 @@ export default function AdminEssayDetailPage() {
         </div>
       </div>
 
+      {/* 编辑内容 Tab */}
       {tab === 'edit' && (
         <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '32px' }}>
           <div style={{ marginBottom: 20 }}>
@@ -318,118 +247,64 @@ export default function AdminEssayDetailPage() {
         </div>
       )}
 
+      {/* 批注编辑 Tab */}
       {tab === 'annotate' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
-          <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '28px 32px' }}>
-            <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
-              💡 选中文字后可添加批注，批注会以括号形式紧跟在文字后面
-            </div>
-            <div
-              ref={contentRef}
-              onMouseUp={handleTextSelect}
-              style={{
-                fontSize: 17,
-                lineHeight: 2,
-                fontFamily: 'Georgia, serif',
-                color: '#1e293b',
-                userSelect: 'text',
-                position: 'relative',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {renderAnnotatedText(essay.content)}
-            </div>
+        <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '28px 32px' }}>
 
-            {popup.visible && (
-              <div style={{
-                position: 'absolute',
-                left: Math.min(popup.x, 400),
-                top: popup.y,
-                background: '#fff',
-                border: '1.5px solid #e8f0fe',
-                borderRadius: 12,
-                padding: '16px',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                zIndex: 100,
-                width: 280,
-              }}>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 10 }}>
-                  选中：<strong style={{ color: '#1e3a5f' }}>{`"${popup.selectedText.slice(0, 30)}${popup.selectedText.length > 30 ? '...' : ''}"`}</strong>
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  {COLORS.map(c => (
-                    <div key={c.value} onClick={() => setPopup(p => ({ ...p, color: c.value }))}
-                      title={c.label}
-                      style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: c.value, cursor: 'pointer',
-                        border: popup.color === c.value ? `3px solid ${c.textColor}` : '2px solid #e2e8f0',
-                      }} />
-                  ))}
-                </div>
-                <textarea
-                  value={popup.comment}
-                  onChange={e => setPopup(p => ({ ...p, comment: e.target.value }))}
-                  placeholder="输入批注内容..."
-                  rows={3}
+          {/* 工具栏 */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            marginBottom: 16, padding: '10px 14px',
+            background: '#f8faff', border: '1.5px solid #e8f0fe',
+            borderRadius: 10, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 13, color: '#64748b' }}>选中文字后点颜色：</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {COLORS.map(c => (
+                <div
+                  key={c.value}
+                  onClick={() => applyColor(c.value)}
+                  title={c.label}
                   style={{
-                    width: '100%', padding: '8px 12px', fontSize: 13,
-                    borderRadius: 8, border: '1.5px solid #e8f0fe',
-                    background: '#f8faff', resize: 'none', outline: 'none',
-                    marginBottom: 10, boxSizing: 'border-box',
+                    width: 26, height: 26, borderRadius: '50%',
+                    background: c.value, cursor: 'pointer',
+                    border: selectedColor === c.value ? '3px solid #1e3a5f' : '2px solid transparent',
+                    transition: 'transform 0.1s',
                   }}
                 />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setPopup(p => ({ ...p, visible: false }))} style={{
-                    flex: 1, padding: '8px', borderRadius: 8,
-                    border: '1.5px solid #e2e8f0', background: '#fff',
-                    color: '#64748b', fontSize: 13, cursor: 'pointer',
-                  }}>取消</button>
-                  <button onClick={handleAddAnnotation} style={{
-                    flex: 1, padding: '8px', borderRadius: 8, border: 'none',
-                    background: '#1d4ed8', color: '#fff', fontSize: 13,
-                    fontWeight: 600, cursor: 'pointer',
-                  }}>添加批注</button>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
+            <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
+            <button
+              onClick={clearFormat}
+              style={{
+                fontSize: 12, padding: '4px 12px', borderRadius: 6,
+                border: '1.5px solid #e2e8f0', background: '#fff',
+                color: '#64748b', cursor: 'pointer',
+              }}
+            >
+              清除颜色
+            </button>
+            <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>
+              💡 直接粘贴Word文章，选中文字点颜色即可
+            </span>
           </div>
 
-          <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '20px' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1e3a5f', marginBottom: 16 }}>
-              批注列表 ({annotations.length})
-            </div>
-            {annotations.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>
-                暂无批注
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {annotations.map(ann => (
-                  <div key={ann.id} style={{
-                    padding: '12px 14px', borderRadius: 10,
-                    border: '1.5px solid #f1f5f9',
-                    borderLeft: `4px solid ${ann.textColor}`,
-                    background: ann.color + '40',
-                  }}>
-                    <div style={{ fontSize: 13, color: '#475569', marginBottom: 6, fontStyle: 'italic' }}>
-                      {`"${essay.content.slice(ann.start, ann.end).slice(0, 40)}..."`}
-                    </div>
-                    <div style={{ fontSize: 14, color: ann.textColor, marginBottom: 8, fontFamily: 'sans-serif' }}>
-                      ({ann.comment})
-                    </div>
-                    <button onClick={() => setAnnotations(prev => prev.filter(a => a.id !== ann.id))}
-                      style={{
-                        fontSize: 12, color: '#ef4444', background: 'none',
-                        border: 'none', cursor: 'pointer', padding: 0,
-                      }}>
-                      删除
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* 富文本编辑区 */}
+          <div
+            ref={editorRef}
+            contentEditable
+            suppressContentEditableWarning
+            style={{
+              fontSize: 17,
+              lineHeight: 2,
+              fontFamily: 'Georgia, serif',
+              color: '#1e293b',
+              minHeight: 400,
+              outline: 'none',
+              whiteSpace: 'pre-wrap',
+            }}
+          />
         </div>
       )}
     </div>

@@ -5,14 +5,6 @@ import api from '@/lib/api'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useAuthStore } from '@/store/authStore'
 
-interface Annotation {
-  id: string
-  start: number
-  end: number
-  color: string
-  comment: string
-}
-
 interface Essay {
   id: number
   title?: string
@@ -36,12 +28,11 @@ export default function EssayDetailPage() {
   const { collapsed } = useLayoutStore()
   const { user } = useAuthStore()
   const [essay, setEssay] = useState<Essay | null>(null)
-  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [annotatedHtml, setAnnotatedHtml] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [downloadingAnnotated, setDownloadingAnnotated] = useState(false)
   const [tab, setTab] = useState<'essay' | 'annotated'>('essay')
-  const [activeAnnotation, setActiveAnnotation] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -50,7 +41,11 @@ export default function EssayDetailPage() {
       .catch(() => router.push('/dashboard/essays'))
       .finally(() => setLoading(false))
     api.get(`/essays/${id}/annotations`)
-      .then(res => setAnnotations(res.data || []))
+      .then(res => {
+        if (typeof res.data === 'string') {
+          setAnnotatedHtml(res.data)
+        }
+      })
       .catch(() => {})
   }, [id, router])
 
@@ -92,50 +87,6 @@ export default function EssayDetailPage() {
     }
   }
 
-  function renderAnnotatedText(content: string) {
-    if (annotations.length === 0) {
-      return (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
-          <div style={{ fontSize: 14 }}>暂无批注</div>
-        </div>
-      )
-    }
-
-    const sorted = [...annotations].sort((a, b) => a.start - b.start)
-    const parts: React.ReactNode[] = []
-    let cursor = 0
-
-    sorted.forEach((ann, i) => {
-      if (ann.start > cursor) {
-        parts.push(<span key={`text-${i}`}>{content.slice(cursor, ann.start)}</span>)
-      }
-      parts.push(
-        <span
-          key={`ann-${ann.id}`}
-          onClick={() => setActiveAnnotation(activeAnnotation === ann.id ? null : ann.id)}
-          style={{
-            background: ann.color,
-            borderRadius: 3,
-            padding: '1px 3px',
-            cursor: 'pointer',
-            borderBottom: activeAnnotation === ann.id ? '2px solid #1d4ed8' : 'none',
-            position: 'relative',
-          }}
-        >
-          {content.slice(ann.start, ann.end)}
-        </span>
-      )
-      cursor = ann.end
-    })
-
-    if (cursor < content.length) {
-      parts.push(<span key="text-end">{content.slice(cursor)}</span>)
-    }
-
-    return <>{parts}</>
-  }
-
   if (loading) return (
     <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8', fontSize: 15 }}>加载中...</div>
   )
@@ -143,7 +94,7 @@ export default function EssayDetailPage() {
   if (!essay) return null
 
   const paragraphs = essay.content.split('\n').filter(p => p.trim())
-  const hasAnnotations = annotations.length > 0
+  const hasAnnotations = !!annotatedHtml.trim()
 
   return (
     <div style={{ maxWidth: collapsed ? '860px' : '100%', margin: collapsed ? '0 20% 0 5%' : '0', transition: 'all .2s ease' }}>
@@ -193,7 +144,7 @@ export default function EssayDetailPage() {
             <span style={{
               fontSize: 11, background: '#fff', color: '#1d4ed8',
               padding: '1px 6px', borderRadius: 10, fontWeight: 700,
-            }}>{annotations.length}</span>
+            }}>✓</span>
           )}
         </button>
       </div>
@@ -273,45 +224,17 @@ export default function EssayDetailPage() {
 
       {/* 批注版 Tab */}
       {tab === 'annotated' && (
-        <div style={{ display: 'grid', gridTemplateColumns: annotations.length > 0 ? '1fr 280px' : '1fr', gap: 20, alignItems: 'start' }}>
-
-          {/* 文章 */}
-          <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '28px 32px', marginBottom: 32 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>批注版范文</div>
-            {annotations.length > 0 && (
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16, padding: '10px 14px', background: '#f8faff', borderRadius: 8 }}>
-                💡 点击高亮文字查看批注
-              </div>
-            )}
-            <div style={{ fontSize: 16, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif', whiteSpace: 'pre-wrap' }}>
-              {renderAnnotatedText(essay.content)}
-            </div>
-          </div>
-
-          {/* 批注列表 */}
-          {annotations.length > 0 && (
-            <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '20px', position: 'sticky', top: 20 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#1e3a5f', marginBottom: 16 }}>
-                批注 ({annotations.length})
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {annotations.map(ann => (
-                  <div key={ann.id}
-                    onClick={() => setActiveAnnotation(activeAnnotation === ann.id ? null : ann.id)}
-                    style={{
-                      padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
-                      border: `1.5px solid ${activeAnnotation === ann.id ? '#1d4ed8' : '#f1f5f9'}`,
-                      borderLeft: `4px solid ${ann.color}`,
-                      background: activeAnnotation === ann.id ? '#eff6ff' : ann.color + '20',
-                      transition: 'all .15s',
-                    }}>
-                    <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6, fontStyle: 'italic' }}>
-                      {`"${essay.content.slice(ann.start, ann.end).slice(0, 30)}..."`}
-                    </div>
-                    <div style={{ fontSize: 14, color: '#1e3a5f' }}>{ann.comment}</div>
-                  </div>
-                ))}
-              </div>
+        <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '28px 32px', marginBottom: 32 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>批注版范文</div>
+          {hasAnnotations ? (
+            <div
+              style={{ fontSize: 16, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}
+              dangerouslySetInnerHTML={{ __html: annotatedHtml }}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
+              <div style={{ fontSize: 14 }}>暂无批注</div>
             </div>
           )}
         </div>
