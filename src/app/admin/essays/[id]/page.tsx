@@ -27,15 +27,16 @@ interface Annotation {
   start: number
   end: number
   color: string
+  textColor: string
   comment: string
 }
 
 const COLORS = [
-  { value: '#fde68a', label: '黄色' },
-  { value: '#bbf7d0', label: '绿色' },
-  { value: '#bfdbfe', label: '蓝色' },
-  { value: '#fecaca', label: '红色' },
-  { value: '#e9d5ff', label: '紫色' },
+  { value: '#bfdbfe', label: '蓝色', textColor: '#1d4ed8' },
+  { value: '#fde68a', label: '黄色', textColor: '#b45309' },
+  { value: '#bbf7d0', label: '绿色', textColor: '#166534' },
+  { value: '#fecaca', label: '红色', textColor: '#991b1b' },
+  { value: '#e9d5ff', label: '紫色', textColor: '#6b21a8' },
 ]
 
 export default function AdminEssayDetailPage() {
@@ -49,7 +50,6 @@ export default function AdminEssayDetailPage() {
   const [form, setForm] = useState({ questionId: '', content: '', score: '' })
   const [tab, setTab] = useState<'edit' | 'annotate'>('edit')
 
-  // 批注相关
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [savingAnnotations, setSavingAnnotations] = useState(false)
   const [popup, setPopup] = useState<{
@@ -61,7 +61,7 @@ export default function AdminEssayDetailPage() {
     selectedText: string
     color: string
     comment: string
-  }>({ visible: false, x: 0, y: 0, start: 0, end: 0, selectedText: '', color: '#fde68a', comment: '' })
+  }>({ visible: false, x: 0, y: 0, start: 0, end: 0, selectedText: '', color: '#bfdbfe', comment: '' })
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -126,7 +126,6 @@ export default function AdminEssayDetailPage() {
     const rect = range.getBoundingClientRect()
     const containerRect = contentRef.current.getBoundingClientRect()
 
-    // 计算在原始文本中的位置
     const content = essay?.content || ''
     const start = content.indexOf(selectedText)
     if (start === -1) return
@@ -139,18 +138,20 @@ export default function AdminEssayDetailPage() {
       start,
       end,
       selectedText,
-      color: '#fde68a',
+      color: '#bfdbfe',
       comment: '',
     })
   }
 
   function handleAddAnnotation() {
     if (!popup.comment.trim()) { alert('请输入批注内容'); return }
+    const colorObj = COLORS.find(c => c.value === popup.color) || COLORS[0]
     const newAnnotation: Annotation = {
       id: Date.now().toString(),
       start: popup.start,
       end: popup.end,
       color: popup.color,
+      textColor: colorObj.textColor,
       comment: popup.comment,
     }
     setAnnotations(prev => [...prev, newAnnotation])
@@ -170,18 +171,18 @@ export default function AdminEssayDetailPage() {
         parts.push(<span key={`text-${i}`}>{content.slice(cursor, ann.start)}</span>)
       }
       parts.push(
-        <span
-          key={`ann-${ann.id}`}
-          style={{
-            background: ann.color,
-            borderRadius: 3,
-            padding: '0 2px',
-            cursor: 'help',
-            position: 'relative',
-          }}
-          title={ann.comment}
-        >
+        <span key={`ann-${ann.id}`}>
           {content.slice(ann.start, ann.end)}
+          <span
+            style={{
+              color: ann.textColor,
+              fontSize: 14,
+              fontFamily: 'sans-serif',
+              marginLeft: 2,
+            }}
+          >
+            ({ann.comment})
+          </span>
         </span>
       )
       cursor = ann.end
@@ -220,7 +221,6 @@ export default function AdminEssayDetailPage() {
         ← 返回列表
       </button>
 
-      {/* 页头 */}
       <div style={{
         background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
         border: '1.5px solid #bfdbfe', borderLeft: '5px solid #1d4ed8',
@@ -270,7 +270,6 @@ export default function AdminEssayDetailPage() {
         </div>
       </div>
 
-      {/* 编辑内容 Tab */}
       {tab === 'edit' && (
         <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '32px' }}>
           <div style={{ marginBottom: 20 }}>
@@ -319,28 +318,28 @@ export default function AdminEssayDetailPage() {
         </div>
       )}
 
-      {/* 批注编辑 Tab */}
       {tab === 'annotate' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
-
-          {/* 左：文章区域 */}
           <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '28px 32px' }}>
             <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
-              💡 选中文字后添加批注
+              💡 选中文字后可添加批注，批注会以括号形式紧跟在文字后面
             </div>
             <div
               ref={contentRef}
               onMouseUp={handleTextSelect}
               style={{
-                fontSize: 16, lineHeight: 2, fontFamily: 'Georgia, serif',
-                color: '#1e293b', userSelect: 'text', position: 'relative',
+                fontSize: 17,
+                lineHeight: 2,
+                fontFamily: 'Georgia, serif',
+                color: '#1e293b',
+                userSelect: 'text',
+                position: 'relative',
                 whiteSpace: 'pre-wrap',
               }}
             >
               {renderAnnotatedText(essay.content)}
             </div>
 
-            {/* 批注弹出框 */}
             {popup.visible && (
               <div style={{
                 position: 'absolute',
@@ -364,7 +363,7 @@ export default function AdminEssayDetailPage() {
                       style={{
                         width: 28, height: 28, borderRadius: '50%',
                         background: c.value, cursor: 'pointer',
-                        border: popup.color === c.value ? '3px solid #1d4ed8' : '2px solid #e2e8f0',
+                        border: popup.color === c.value ? `3px solid ${c.textColor}` : '2px solid #e2e8f0',
                       }} />
                   ))}
                 </div>
@@ -396,7 +395,6 @@ export default function AdminEssayDetailPage() {
             )}
           </div>
 
-          {/* 右：批注列表 */}
           <div style={{ background: '#fff', border: '1.5px solid #e8f0fe', borderRadius: 14, padding: '20px' }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#1e3a5f', marginBottom: 16 }}>
               批注列表 ({annotations.length})
@@ -411,14 +409,14 @@ export default function AdminEssayDetailPage() {
                   <div key={ann.id} style={{
                     padding: '12px 14px', borderRadius: 10,
                     border: '1.5px solid #f1f5f9',
-                    borderLeft: `4px solid ${ann.color}`,
-                    background: ann.color + '30',
+                    borderLeft: `4px solid ${ann.textColor}`,
+                    background: ann.color + '40',
                   }}>
                     <div style={{ fontSize: 13, color: '#475569', marginBottom: 6, fontStyle: 'italic' }}>
                       {`"${essay.content.slice(ann.start, ann.end).slice(0, 40)}..."`}
                     </div>
-                    <div style={{ fontSize: 14, color: '#1e3a5f', marginBottom: 8 }}>
-                      {ann.comment}
+                    <div style={{ fontSize: 14, color: ann.textColor, marginBottom: 8, fontFamily: 'sans-serif' }}>
+                      ({ann.comment})
                     </div>
                     <button onClick={() => setAnnotations(prev => prev.filter(a => a.id !== ann.id))}
                       style={{
