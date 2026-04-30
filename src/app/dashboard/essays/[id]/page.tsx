@@ -33,6 +33,7 @@ export default function EssayDetailPage() {
   const [downloading, setDownloading] = useState(false)
   const [downloadingAnnotated, setDownloadingAnnotated] = useState(false)
   const [tab, setTab] = useState<'essay' | 'annotated'>('essay')
+  const [fontSize, setFontSize] = useState(16)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -124,29 +125,47 @@ export default function EssayDetailPage() {
         {essay.source && <span style={{ fontSize: 13, color: '#94a3b8', padding: '4px 0' }}>{essay.source}</span>}
       </div>
 
-      {/* Tab 切换 */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
-        <button onClick={() => setTab('essay')} style={{
-          padding: '9px 20px', borderRadius: 9, border: 'none',
-          background: tab === 'essay' ? '#1d4ed8' : '#eff6ff',
-          color: tab === 'essay' ? '#fff' : '#1d4ed8',
-          fontSize: 14, fontWeight: tab === 'essay' ? 700 : 500, cursor: 'pointer',
-        }}>📄 范文</button>
-        <button onClick={() => setTab('annotated')} style={{
-          padding: '9px 20px', borderRadius: 9, border: 'none',
-          background: tab === 'annotated' ? '#1d4ed8' : '#eff6ff',
-          color: tab === 'annotated' ? '#fff' : '#1d4ed8',
-          fontSize: 14, fontWeight: tab === 'annotated' ? 700 : 500,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-        }}>
-          🖊 批注版
-          {hasAnnotations && (
-            <span style={{
-              fontSize: 11, background: '#fff', color: '#1d4ed8',
-              padding: '1px 6px', borderRadius: 10, fontWeight: 700,
-            }}>✓</span>
-          )}
-        </button>
+      {/* Tab 切换 + 字体大小控制 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => setTab('essay')} style={{
+            padding: '9px 20px', borderRadius: 9, border: 'none',
+            background: tab === 'essay' ? '#1d4ed8' : '#eff6ff',
+            color: tab === 'essay' ? '#fff' : '#1d4ed8',
+            fontSize: 14, fontWeight: tab === 'essay' ? 700 : 500, cursor: 'pointer',
+          }}>📄 范文</button>
+          <button onClick={() => setTab('annotated')} style={{
+            padding: '9px 20px', borderRadius: 9, border: 'none',
+            background: tab === 'annotated' ? '#1d4ed8' : '#eff6ff',
+            color: tab === 'annotated' ? '#fff' : '#1d4ed8',
+            fontSize: 14, fontWeight: tab === 'annotated' ? 700 : 500,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            🖊 批注版
+            {hasAnnotations && (
+              <span style={{
+                fontSize: 11, background: '#fff', color: '#1d4ed8',
+                padding: '1px 6px', borderRadius: 10, fontWeight: 700,
+              }}>✓</span>
+            )}
+          </button>
+        </div>
+
+        {/* 字体大小控制器 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 14px', background: '#f8faff', border: '1.5px solid #e8f0fe', borderRadius: 10 }}>
+          <span style={{ fontSize: 12, color: '#64748b' }}>字号</span>
+          <button onClick={() => setFontSize(s => Math.max(12, s - 1))} style={{
+            width: 24, height: 24, borderRadius: 6, border: '1px solid #e2e8f0',
+            background: '#fff', cursor: 'pointer', fontSize: 14, color: '#64748b',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>−</button>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#1e3a5f', minWidth: 28, textAlign: 'center' }}>{fontSize}</span>
+          <button onClick={() => setFontSize(s => Math.min(24, s + 1))} style={{
+            width: 24, height: 24, borderRadius: 6, border: '1px solid #e2e8f0',
+            background: '#fff', cursor: 'pointer', fontSize: 14, color: '#64748b',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>+</button>
+        </div>
       </div>
 
       {/* 下载按钮 */}
@@ -188,7 +207,7 @@ export default function EssayDetailPage() {
       {essay.questionContent && (
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>题目</div>
-          <div style={{ fontSize: 17, color: '#374151', lineHeight: 1.85, fontFamily: 'Georgia, serif' }}>
+          <div style={{ fontSize: fontSize, color: '#374151', lineHeight: 1.85, fontFamily: 'Georgia, serif' }}>
             {essay.questionContent}
           </div>
           {essay.questionImageUrl && (
@@ -204,7 +223,7 @@ export default function EssayDetailPage() {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>范文</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {paragraphs.map((para, i) => (
-              <p key={i} style={{ fontSize: 16, color: '#1e293b', lineHeight: 1.95, margin: 0, fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>
+              <p key={i} style={{ fontSize: fontSize, color: '#1e293b', lineHeight: 1.95, margin: 0, fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>
                 {para}
               </p>
             ))}
@@ -228,7 +247,7 @@ export default function EssayDetailPage() {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 20 }}>批注版范文</div>
           {hasAnnotations ? (
             <div
-              style={{ fontSize: 16, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}
+              style={{ fontSize: fontSize, color: '#1e293b', lineHeight: 2, fontFamily: 'Georgia, serif' }}
               dangerouslySetInnerHTML={{ __html: annotatedHtml }}
             />
           ) : (

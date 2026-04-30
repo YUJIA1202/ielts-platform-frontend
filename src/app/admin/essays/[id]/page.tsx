@@ -42,6 +42,7 @@ export default function AdminEssayDetailPage() {
   const [tab, setTab] = useState<'edit' | 'annotate'>('edit')
   const [savingAnnotations, setSavingAnnotations] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#1d4ed8')
+  const [fontSize, setFontSize] = useState(17)
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -67,7 +68,6 @@ export default function AdminEssayDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // 切换到批注tab时初始化编辑器内容
   useEffect(() => {
     if (tab === 'annotate' && editorRef.current && essay) {
       if (!editorRef.current.innerHTML.trim()) {
@@ -269,22 +269,34 @@ export default function AdminEssayDetailPage() {
                     width: 26, height: 26, borderRadius: '50%',
                     background: c.value, cursor: 'pointer',
                     border: selectedColor === c.value ? '3px solid #1e3a5f' : '2px solid transparent',
-                    transition: 'transform 0.1s',
                   }}
                 />
               ))}
             </div>
             <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
-            <button
-              onClick={clearFormat}
-              style={{
-                fontSize: 12, padding: '4px 12px', borderRadius: 6,
-                border: '1.5px solid #e2e8f0', background: '#fff',
-                color: '#64748b', cursor: 'pointer',
-              }}
-            >
+            <button onClick={clearFormat} style={{
+              fontSize: 12, padding: '4px 12px', borderRadius: 6,
+              border: '1.5px solid #e2e8f0', background: '#fff',
+              color: '#64748b', cursor: 'pointer',
+            }}>
               清除颜色
             </button>
+            <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
+            {/* 字호 조절 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>字号</span>
+              <button onClick={() => setFontSize(s => Math.max(12, s - 1))} style={{
+                width: 24, height: 24, borderRadius: 6, border: '1px solid #e2e8f0',
+                background: '#fff', cursor: 'pointer', fontSize: 14, color: '#64748b',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>−</button>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1e3a5f', minWidth: 28, textAlign: 'center' }}>{fontSize}</span>
+              <button onClick={() => setFontSize(s => Math.min(24, s + 1))} style={{
+                width: 24, height: 24, borderRadius: 6, border: '1px solid #e2e8f0',
+                background: '#fff', cursor: 'pointer', fontSize: 14, color: '#64748b',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>+</button>
+            </div>
             <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>
               💡 直接粘贴Word文章，选中文字点颜色即可
             </span>
@@ -296,7 +308,7 @@ export default function AdminEssayDetailPage() {
             contentEditable
             suppressContentEditableWarning
             style={{
-              fontSize: 17,
+              fontSize: fontSize,
               lineHeight: 2,
               fontFamily: 'Georgia, serif',
               color: '#1e293b',
