@@ -185,6 +185,23 @@ function NavContent({ user, pathname, onNav, onLogout, collapsed, onToggle }: {
       </nav>
 
       <div style={{ padding: '12px 8px', borderTop: '1px solid #e8f0fe', flexShrink: 0 }}>
+      {user?.role === 'ADMIN' && (
+        <div
+          onClick={() => onNav('/admin')}
+          title={collapsed ? '管理后台' : ''}
+          style={{
+            display: 'flex', alignItems: 'center',
+            gap: collapsed ? 0 : 10,
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? '10px 0' : '9px 12px',
+            borderRadius: 10, cursor: 'pointer',
+            color: '#f59e0b', fontSize: 14, marginBottom: 4,
+          }}
+        >
+          <span style={{ fontSize: 17 }}>🛡️</span>
+          {!collapsed && <span>管理后台</span>}
+        </div>
+      )}
         <div onClick={onLogout} title={collapsed ? '退出登录' : ''}
           style={{
             display: 'flex', alignItems: 'center',
@@ -244,21 +261,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { collapsed, setCollapsed, hideLayout } = useLayoutStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
-    if (!user) {
-      api.get('/auth/me').then((res) => {
-        setAuth(res.data, token)
-      }).catch(() => {
-        logout()
-        router.push('/login')
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handleLogout = () => { logout(); router.push('/login') }
+useEffect(() => {
+  if (!user) {
+    api.get('/auth/me').then((res) => {
+      setAuth(res.data, localStorage.getItem('token') || '')
+    }).catch(() => {
+      logout()
+      router.push('/login')
+    })
+  }  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
+const handleLogout = async () => {
+  try { await api.post('/auth/logout') } catch {}
+  logout()
+  router.push('/login')
+}
   const handleNav = (path: string) => { router.push(path); setSidebarOpen(false) }
   const sidebarWidth = collapsed ? 64 : 220
   const mainPadding = collapsed ? '32px 108px 32px 120px' : '32px 40px'
