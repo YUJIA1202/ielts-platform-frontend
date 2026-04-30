@@ -60,11 +60,15 @@ export default function AdminEssayDetailPage() {
     api.get('/questions', { params: { limit: '200' } })
       .then(res => setQuestions(res.data.questions || []))
     api.get(`/essays/${id}/annotations`)
-      .then(res => {
-        if (editorRef.current && typeof res.data === 'string' && res.data) {
-          editorRef.current.innerHTML = res.data
-        }
-      })
+  .then(res => {
+    if (!editorRef.current) return
+    const data = res.data
+    // 是字符串且以HTML标签开头，才是新格式
+    if (typeof data === 'string' && data.trim().startsWith('<')) {
+      editorRef.current.innerHTML = data
+    }
+    // 否则是旧JSON或空，不处理，等tab切换时自动填入原始文章
+  })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
