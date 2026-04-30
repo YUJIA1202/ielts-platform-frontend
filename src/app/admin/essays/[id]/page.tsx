@@ -43,6 +43,7 @@ export default function AdminEssayDetailPage() {
   const [savingAnnotations, setSavingAnnotations] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#1d4ed8')
   const [fontSize, setFontSize] = useState(17)
+  const [annotatedHtml, setAnnotatedHtml] = useState<string>('')
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,25 +61,21 @@ export default function AdminEssayDetailPage() {
     api.get('/questions', { params: { limit: '200' } })
       .then(res => setQuestions(res.data.questions || []))
     api.get(`/essays/${id}/annotations`)
-  .then(res => {
-    if (!editorRef.current) return
-    const data = res.data
-    // 是字符串且以HTML标签开头，才是新格式
-    if (typeof data === 'string' && data.trim().startsWith('<')) {
-      editorRef.current.innerHTML = data
-    }
-    // 否则是旧JSON或空，不处理，等tab切换时自动填入原始文章
-  })
+      .then(res => {
+        const data = res.data
+        if (typeof data === 'string' && data.trim().startsWith('<')) {
+          setAnnotatedHtml(data)
+        }
+      })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   useEffect(() => {
     if (tab === 'annotate' && editorRef.current && essay) {
-      if (!editorRef.current.innerHTML.trim()) {
-        editorRef.current.innerHTML = essay.content
-      }
+      editorRef.current.innerHTML = annotatedHtml || essay.content
     }
-  }, [tab, essay])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
 
   async function handleSave() {
     if (!form.content.trim()) { alert('范文内容不能为空'); return }
@@ -105,9 +102,9 @@ export default function AdminEssayDetailPage() {
     if (!editorRef.current) return
     setSavingAnnotations(true)
     try {
-      await api.put(`/essays/${id}/annotations`, {
-        annotations: editorRef.current.innerHTML
-      })
+      const html = editorRef.current.innerHTML
+      setAnnotatedHtml(html)
+      await api.put(`/essays/${id}/annotations`, { annotations: html })
       alert('批注保存成功')
     } catch {
       alert('保存失败')
@@ -286,7 +283,6 @@ export default function AdminEssayDetailPage() {
               清除颜色
             </button>
             <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
-            {/* 字호 조절 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, color: '#64748b' }}>字号</span>
               <button onClick={() => setFontSize(s => Math.max(12, s - 1))} style={{
