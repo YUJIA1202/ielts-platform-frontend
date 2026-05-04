@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef, Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useLayoutStore } from '@/store/layoutStore'
 import Link from 'next/link'
@@ -38,6 +38,18 @@ function SubmitPageInner() {
   const [submitError, setSubmitError] = useState('')
   const [done, setDone] = useState(false)
   const [examBanner, setExamBanner] = useState(fromExam)
+
+  useEffect(() => {
+    if (fromExam) {
+      const raw = sessionStorage.getItem('examSubmit')
+      if (raw) {
+        const { questionText: q, answer: a } = JSON.parse(raw)
+        if (q) setQuestionText(q)
+        if (a) setEssayText(a)
+        sessionStorage.removeItem('examSubmit')
+      }
+    }
+  }, [])
 
   function handleQImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -79,7 +91,6 @@ function SubmitPageInner() {
     return hasQ && hasE && codeValid
   }
 
-  // ── 验证批改码（调用真实 API）──────────────────────────────────────
   async function verifyCode() {
     const code = correctionCode.trim()
     if (!code) { setCodeError('请输入批改码'); return }
@@ -105,7 +116,6 @@ function SubmitPageInner() {
     }
   }
 
-  // ── 提交作文（调用真实 API）───────────────────────────────────────
   async function handleSubmit() {
     if (!validate()) return
     setSubmitting(true)
