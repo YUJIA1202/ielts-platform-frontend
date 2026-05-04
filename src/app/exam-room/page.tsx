@@ -115,10 +115,16 @@ function ExamRoomContent() {
           {isMix ? `Task 2: ${wc1} 词  |  Task 1: ${wc2} 词` : `共写了 ${wc1} 词`}
         </div>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          <button onClick={() => router.push('/dashboard/submit')}
-            style={{ padding: '12px 28px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>
-            提交批改
-          </button>
+        <button onClick={() => {
+  sessionStorage.setItem('examSubmit', JSON.stringify({
+    questionText: mainQ?.content ?? '',
+    answer: mainAnswer,
+  }))
+  router.push('/dashboard/submit?fromExam=1')
+}}
+  style={{ padding: '12px 28px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>
+  提交批改
+</button>
           <button onClick={() => router.push('/dashboard/exam')}
             style={{ padding: '12px 28px', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', cursor: 'pointer' }}>
             再来一题
