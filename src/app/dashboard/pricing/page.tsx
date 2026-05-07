@@ -143,9 +143,14 @@ function PlanModal({ plan, currentPlan, onClose }: { plan: Plan; currentPlan: Pl
           </div>
 
           {/* 购买按钮 */}
-          <button disabled style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'not-allowed', background: isCurrent || plan === 'FREE' ? '#f1f5f9' : plan === 'PRO' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #3b82f6, #2563eb)', color: isCurrent || plan === 'FREE' ? '#94a3b8' : '#fff', opacity: isCurrent || plan === 'FREE' ? 1 : 0.75 }}>
-            {isCurrent ? '已是当前方案' : plan === 'FREE' ? '当前免费使用中' : '支付功能即将开放'}
-          </button>
+          <button disabled style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'not-allowed', background: plan === 'FREE' ? '#f1f5f9' : plan === 'PRO' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #3b82f6, #2563eb)', color: plan === 'FREE' ? '#94a3b8' : '#fff', opacity: 0.75 }}>
+  {plan === 'FREE' 
+    ? '当前免费使用中' 
+    : isCurrent 
+      ? `续费 · ${plan === 'BASIC' ? selectedBasic.label + ' ¥' + selectedBasic.price : selectedPro.label + ' ¥' + selectedPro.price}`
+      : `升级 · ${plan === 'BASIC' ? selectedBasic.label + ' ¥' + selectedBasic.price : selectedPro.label + ' ¥' + selectedPro.price}`
+  }
+</button>
           {!isCurrent && plan !== 'FREE' && (
             <p style={{ textAlign: 'center', fontSize: 12, color: '#94a3b8', margin: '10px 0 0' }}>支付功能即将开放，如需提前购买请联系客服</p>
           )}
