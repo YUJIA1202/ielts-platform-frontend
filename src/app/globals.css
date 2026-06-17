@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 :root {
   --accent: #C0392B;
   --accent-hover: #A93226;
@@ -17,4 +15,8 @@ body {
   background: var(--bg);
   color: var(--text1);
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
