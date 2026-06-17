@@ -46,3 +46,23 @@ export interface Video {
   duration: number | null
   createdAt: string
 }
+
+export interface ExamSession {
+  id: number
+  userId: number
+  primaryQuestionId: number
+  secondaryQuestionId: number | null
+  mode: 'SINGLE' | 'MIXED'
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
+  primaryAnswer: string | null
+  secondaryAnswer: string | null
+  durationSeconds: number
+  elapsedSeconds: number
+  currentPart: number
+  startedAt: string
+  completedAt: string | null
+  createdAt: string
+  updatedAt: string
+  primaryQuestion: Question
+  secondaryQuestion: Question | null
+}

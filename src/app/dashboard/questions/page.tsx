@@ -88,8 +88,23 @@ export default function QuestionsPage() {
     <div style={{ maxWidth: collapsed ? '920px' : '100%', margin: collapsed ? '0 20% 0 5%' : '0', transition: 'all .2s ease' }}>
 
       <div style={{ marginBottom: '28px' }}>
-        <div style={{ fontSize: '26px', fontWeight: '700', color: '#1e3a5f' }}>真题库</div>
-        <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '6px' }}>共 {total} 道真题，持续更新中</div>
+        <div style={{ fontSize: '26px', fontWeight: '700', color: '#1e3a5f' }}>真题 · 范文 · 模考</div>
+        <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '6px' }}>从题目进入，可查看思路、范文或开始计时模考，共 {total} 道题目</div>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
+        <button
+          onClick={() => router.push('/dashboard/exam')}
+          style={{ border: 'none', borderRadius: 9, padding: '10px 18px', background: '#2563eb', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+        >
+          开始完整模考
+        </button>
+        <button
+          onClick={() => router.push('/dashboard/exams')}
+          style={{ border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 18px', background: '#eff6ff', color: '#2563eb', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+        >
+          我的模考记录
+        </button>
       </div>
 
       {/* 搜索框 */}

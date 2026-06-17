@@ -22,6 +22,7 @@ function NavContent({ user, pathname, onNav, onLogout, collapsed, onToggle }: {
   const [studyOpen, setStudyOpen] = useState(
     pathname.startsWith('/dashboard/essays') ||
     pathname.startsWith('/dashboard/videos') ||
+    pathname.startsWith('/dashboard/ai-review-demo') ||
     pathname.startsWith('/dashboard/submit') ||
     pathname.startsWith('/dashboard/submissions')||
     pathname.startsWith('/dashboard/scores') ||
@@ -97,15 +98,15 @@ function NavContent({ user, pathname, onNav, onLogout, collapsed, onToggle }: {
       )}
 
       <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', minHeight: 0 }}>
-        <NavItem icon="📚" label="真题库" path="/dashboard/questions" pathname={pathname} onNav={onNav} collapsed={collapsed} />
-        <NavItem icon="💻" label="模拟机考" path="/dashboard/exam" pathname={pathname} onNav={onNav} collapsed={collapsed} />
+        <NavItem icon="📚" label="真题・范文・模考" path="/dashboard/questions" pathname={pathname} onNav={onNav} collapsed={collapsed} />
+        <NavItem icon="🕒" label="模考记录" path="/dashboard/exams" pathname={pathname} onNav={onNav} collapsed={collapsed} />
 
         <Divider collapsed={collapsed} />
 
         {collapsed ? (
           <>
-            <NavItem icon="📝" label="范文精选" path="/dashboard/essays" pathname={pathname} onNav={onNav} collapsed={collapsed} />
             <NavItem icon="🎬" label="视频课" path="/dashboard/videos" pathname={pathname} onNav={onNav} collapsed={collapsed} />
+            <NavItem icon="AI" label="AI 批改" path="/dashboard/ai-review-demo" pathname={pathname} onNav={onNav} collapsed={collapsed} />
             <NavItem icon="✏️" label="提交批改" path="/dashboard/submit" pathname={pathname} onNav={onNav} collapsed={collapsed} />
             <NavItem icon="📋" label="我的批改" path="/dashboard/submissions" pathname={pathname} onNav={onNav} collapsed={collapsed} />
             <NavItem icon="📊" label="我的分数" path="/dashboard/scores" pathname={pathname} onNav={onNav} collapsed={collapsed} />
@@ -129,8 +130,8 @@ function NavContent({ user, pathname, onNav, onLogout, collapsed, onToggle }: {
             </div>
             {studyOpen && (
               <div style={{ paddingLeft: '12px', marginBottom: '2px' }}>
-                <NavItem icon="📝" label="范文精选" path="/dashboard/essays" pathname={pathname} onNav={onNav} collapsed={false} />
                 <NavItem icon="🎬" label="视频课" path="/dashboard/videos" pathname={pathname} onNav={onNav} collapsed={false} />
+                <NavItem icon="AI" label="AI 批改" path="/dashboard/ai-review-demo" pathname={pathname} onNav={onNav} collapsed={false} />
                 <NavItem icon="✏️" label="提交批改" path="/dashboard/submit" pathname={pathname} onNav={onNav} collapsed={false} />
                 <NavItem icon="📋" label="我的批改" path="/dashboard/submissions" pathname={pathname} onNav={onNav} collapsed={false} />
                 <NavItem icon="📊" label="我的分数" path="/dashboard/scores" pathname={pathname} onNav={onNav} collapsed={false} />
@@ -181,7 +182,7 @@ function NavContent({ user, pathname, onNav, onLogout, collapsed, onToggle }: {
         <NavItem icon="💎" label="订阅方案" path="/dashboard/pricing" pathname={pathname} onNav={onNav} collapsed={collapsed} />
         <NavItem icon="👤" label="个人主页" path="/dashboard/profile" pathname={pathname} onNav={onNav} collapsed={collapsed} />
         <NavItem icon="📞" label="联系客服" path="/dashboard/contact" pathname={pathname} onNav={onNav} collapsed={collapsed} />
-        <NavItem icon="ℹ️" label="关于我们" path="/dashboard/about" pathname={pathname} onNav={onNav} collapsed={collapsed} />
+        <NavItem icon="📢" label="公告栏" path="/dashboard/about" pathname={pathname} onNav={onNav} collapsed={collapsed} />
       </nav>
 
       <div style={{ padding: '12px 8px', borderTop: '1px solid #e8f0fe', flexShrink: 0 }}>
@@ -355,7 +356,7 @@ const handleLogout = async () => {
             <>{children}</>
           ) : (
             <>
-              {collapsed && (
+              {collapsed && 
                 <div style={{
                   position: 'fixed', left: `${sidebarWidth}px`, right: 0,
                   top: 0, bottom: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden',
@@ -385,7 +386,7 @@ const handleLogout = async () => {
                     }}>{w.text}</div>
                   ))}
                 </div>
-              )}
+              }
               <div
                 className="main-inner"
                 style={{
